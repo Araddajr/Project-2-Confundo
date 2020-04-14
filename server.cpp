@@ -9,6 +9,7 @@
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <string.h>
+#include <fstream>
 
 
 //using std::cerr; 
@@ -44,12 +45,11 @@ int main(int argc, char *argv[]) {
     signal(SIGTERM, signal_quit); // Check for SIGTERM
 
     int sockfd;             // Variable for socket
-    char buffer[TOTAL];     // Total buffer size
     struct sockaddr_in serverAddr, clientAddr;         // Structures used to store server and client addresses 
 
-    socklen_t addrSize, clientAddrSize;         // Store size of addresses
+    socklen_t addrSize;  //, clientAddrSize;         // Store size of addresses
 
-    if ((sockfd = socket(PF_INET, SOCK_DGRAM, 0) < 0)) {    // Create UDP socket
+    if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {    // Create UDP socket
         cerr << "ERROR: Failed creating socket";            // Print error on creation fail
         exit(EXIT_FAILURE);                                 // Exit the program
     }
@@ -61,7 +61,7 @@ int main(int argc, char *argv[]) {
     serverAddr.sin_addr.s_addr = htonl(INADDR_ANY);                         // Set address
     memset(serverAddr.sin_zero, '\0', sizeof(serverAddr.sin_zero));
   
-    if (bind(sockfd, (struct sockaddr*) & serverAddr, sizeof(serverAddr)) < 0) {            //Bind socket
+    if (bind(sockfd, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) == -1) {            //Bind socket
         cerr << "ERROR: Unable to bind";
         exit(EXIT_FAILURE);
     }
@@ -71,6 +71,25 @@ int main(int argc, char *argv[]) {
     FD_SET(sockfd, &readfds);                   // Set the file descriptor 
 
     addrSize = sizeof(clientAddr);              // Save size
+
+    ofstream write_file("1.file", ios::binary);
+    char buffer[TOTAL];     // Total buffer size
+
+    while (1) {
+
+        int bytesRecv = recvfrom(sockfd, buffer, sizeof(buffer), 0, (struct sockaddr*)&clientAddr, &addrSize);
+
+        if (bytesRecv > 0) {
+           //cerr << "Error: Unable to receive";
+           fprintf(stderr, "%d", bytesRecv);
+        }
+
+        write_file.write(buffer, bytesRecv);
+    }
+
+    //close(sockfd);
+    
+    return 0;
 }
 
 void signal_quit(int quit) { // Function for handling SIGQUIT signal

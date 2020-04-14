@@ -10,11 +10,15 @@
 #include <fcntl.h>
 #include <string.h>
 #include <netdb.h>
+#include <fstream>
+#include <unistd.h>
 
 using namespace std;
 
-int main(int argc, char *argv[]){
-    {
+#define TOTAL 524
+
+int main(int argc, char *argv[]) {
+    
         if (argc != 4) {  // Check number of command-line arguments
             cerr << "ERROR: Incorrect number of arguments. <HOSTNAME> <PORT> <FILENAME> is required.\n";  //Print error if incorrect number of arguments
             exit(EXIT_FAILURE); // Exit the program
@@ -53,7 +57,7 @@ int main(int argc, char *argv[]){
         int sockfd;     //Variable for socket
         struct sockaddr_in clientAddr;
 
-        if ((sockfd = socket(PF_INET, SOCK_DGRAM, 0) < 0)) {    // Create UDP socket
+        if ((sockfd = socket(PF_INET, SOCK_DGRAM, 0)) < 0) {    // Create UDP socket
             cerr << "ERROR: Failed creating socket";            // Print error on creation fail
             exit(EXIT_FAILURE);                                 // Exit the program
         }
@@ -73,6 +77,27 @@ int main(int argc, char *argv[]){
 
         clientSize = sizeof(clientAddr);              // Save size
 
-    }
+        char buffer[TOTAL];
+        ifstream read_file(file, ios::binary);
 
+        while (1) {
+            memset(buffer, '\0', sizeof(buffer));
+
+            int bytes_sent = read_file.read(buffer, sizeof(buffer)).gcount();
+
+            fprintf(stderr, "%s", file.c_str());
+
+            if (bytes_sent == 0) {
+                break;
+            }
+
+            if (sendto(sockfd, buffer, sizeof(buffer), 0, (struct sockaddr*) & clientAddr, clientSize) == -1) {
+                cerr << "ERROR: Unable to send";
+                exit(EXIT_FAILURE);
+            }
+        }
+
+        //close(sockfd);
+
+        return 0;
 }
