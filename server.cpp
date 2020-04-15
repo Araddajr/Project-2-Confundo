@@ -34,13 +34,6 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);  // Exit the program
     }
 
-    char *directory = argv[2];  // Get directory from command-line
-
-    struct stat save = { 0 }; 
-    if (stat(directory, &save) == -1) { // Check if directory exists
-        mkdir(directory + 1, 0700);  // If it does not exist, make directory with user permissions of read, write, and execute
-    }
-
     signal(SIGQUIT, signal_quit); // Check for SIQQUIT
     signal(SIGTERM, signal_quit); // Check for SIGTERM
 
@@ -66,28 +59,56 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
-    fd_set readfds;                             // File decriptors to check
-    FD_ZERO(&readfds);                          // Set file descriptors to zero
-    FD_SET(sockfd, &readfds);                   // Set the file descriptor 
+    //fd_set readfds;                             // File decriptors to check
+    //FD_ZERO(&readfds);                          // Set file descriptors to zero
+    //FD_SET(sockfd, &readfds);                   // Set the file descriptor 
 
     addrSize = sizeof(clientAddr);              // Save size
 
-    ofstream write_file("1.file", ios::binary);
+    int remove = 1;  // Delete / from path
+    int count = 1;  // Counter
+    char* directory = argv[2];  // Get directory from command-line
+    string filename = to_string(count); // Set filename
+    string fslash = "/";
+    string path = directory + fslash + filename + ".file"; // Set path with directory and filename
+
+    struct stat save = { 0 };
+    if (stat(directory, &save) == -1) { // Check if directory exists
+        mkdir(directory + 1, 0700);  // If it does not exist, make directory with user permissions of read, write, and execute
+    }
+   
+    while (1) {
+        if (stat(path.c_str() + remove, &save) == -1) {
+            ofstream write_file(path.c_str() + remove, ios::binary);
+            break;
+        }
+        else {
+            count++;
+            filename = to_string(count);
+            path = directory + fslash + filename + ".file";
+        }
+    }
+
+    ofstream write_file(path.c_str() + remove, ios::out | ios::app | ios::binary);
     char buffer[TOTAL];     // Total buffer size
 
     while (1) {
 
         int bytesRecv = recvfrom(sockfd, buffer, sizeof(buffer), 0, (struct sockaddr*)&clientAddr, &addrSize);
 
-        if (bytesRecv > 0) {
+        //if (bytesRecv > 0) {
            //cerr << "Error: Unable to receive";
-           fprintf(stderr, "%d", bytesRecv);
-        }
+           //fprintf(stderr, "%d", bytesRecv);
+       // }
+        
+        int i;
 
-        write_file.write(buffer, bytesRecv);
+        for (i = 0; i < bytesRecv; i++) {
+            write_file << buffer[i];
+        }
     }
 
-    //close(sockfd);
+    write_file.close();
     
     return 0;
 }
