@@ -1,3 +1,11 @@
+/*
+Name: Alan Radda Jr.
+NUID: 54265365
+Class: CSCI 3550
+Assignment: Project 2: Confundo
+Due Date: 4/15/2020
+*/
+
 #include <string>
 #include <thread>
 #include <iostream>
@@ -50,7 +58,7 @@ int main(int argc, char *argv[]) {
 
      char hostName[256];
      for (p = hostInfo; p != NULL; p = p->ai_next) {
-         getnameinfo(p->ai_addr, p->ai_addrlen, hostName, sizeof(hostName), NULL, 0, NI_NUMERICHOST);
+         getnameinfo(p->ai_addr, p->ai_addrlen, hostName, sizeof(hostName), NULL, 0, NI_NUMERICHOST);    //Get and store host connection info
      }
 
      freeaddrinfo(hostInfo);
@@ -65,33 +73,29 @@ int main(int argc, char *argv[]) {
 
      fcntl(sockfd, F_SETFL, O_NONBLOCK);                     // Set socket to non-blocking
 
-     clientAddr.sin_family = AF_INET;
-     clientAddr.sin_port = htons(pnum);
-     clientAddr.sin_addr.s_addr = inet_addr(hostName);
+     clientAddr.sin_family = AF_INET;                        // Set address family
+     clientAddr.sin_port = htons(pnum);                      // Set port number
+     clientAddr.sin_addr.s_addr = inet_addr(hostName);       // Set address
      memset(clientAddr.sin_zero, '\0', sizeof(clientAddr.sin_zero));
 
      socklen_t clientSize;
 
-     //fd_set readfds;                             // File decriptors to check
-     //FD_ZERO(&readfds);                          // Set file descriptors to zero
-     //FD_SET(sockfd, &readfds);                   // Set the file descriptor 
-
      clientSize = sizeof(clientAddr);              // Save size
 
-     char buffer[BYTES_TO_SEND];
-     ifstream read_file(file, ios::binary);
+     char buffer[BYTES_TO_SEND];                    // Buffer used to send data
+     ifstream read_file(file, ios::binary);         // Read from file
 
      while (1) {
          memset(buffer, '\0', sizeof(buffer));
 
-         int bytes_sent = read_file.read(buffer, sizeof(buffer)).gcount();
+         int bytes_sent = read_file.read(buffer, sizeof(buffer)).gcount();      // Get size of data to send
 
-         if (sendto(sockfd, buffer, sizeof(buffer), 0, (struct sockaddr*) & clientAddr, clientSize) == -1) {
+         if (sendto(sockfd, buffer, sizeof(buffer), 0, (struct sockaddr*) & clientAddr, clientSize) == -1) {  // Send data
              cerr << "ERROR: Unable to send";
              exit(EXIT_FAILURE);
          }
 
-         if (read_file.eof() || bytes_sent == 0) {
+         if (read_file.eof() || bytes_sent == 0) {  // Exit when all data is sent
              break;
          }
      }

@@ -1,3 +1,11 @@
+/*
+Name: Alan Radda Jr.
+NUID: 54265365
+Class: CSCI 3550
+Assignment: Project 2: Confundo
+Due Date: 4/15/2020
+*/
+
 #include <string>
 #include <thread>
 #include <iostream>
@@ -59,10 +67,6 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
-    //fd_set readfds;                             // File decriptors to check
-    //FD_ZERO(&readfds);                          // Set file descriptors to zero
-    //FD_SET(sockfd, &readfds);                   // Set the file descriptor 
-
     addrSize = sizeof(clientAddr);              // Save size
 
     int remove = 1;  // Delete / from path
@@ -78,37 +82,32 @@ int main(int argc, char *argv[]) {
     }
    
     while (1) {
-        if (stat(path.c_str() + remove, &save) == -1) {
-            ofstream write_file(path.c_str() + remove, ios::binary);
-            break;
+        if (stat(path.c_str() + remove, &save) == -1) {                         // Check if filename exists
+            ofstream write_file(path.c_str() + remove, ios::out | ios::app | ios::binary);            // If it doesn't, write file
+            break;                                                              
         }
         else {
-            count++;
-            filename = to_string(count);
-            path = directory + fslash + filename + ".file";
+            count++;                                                            // Update count
+            filename = to_string(count);                                        // Update filename
+            path = directory + fslash + filename + ".file";                     // Update path
         }
     }
 
-    ofstream write_file(path.c_str() + remove, ios::out | ios::app | ios::binary);
+    ofstream write_file(path.c_str() + remove, ios::out | ios::app | ios::binary);    // Write file
     char buffer[TOTAL];     // Total buffer size
 
     while (1) {
 
-        int bytesRecv = recvfrom(sockfd, buffer, sizeof(buffer), 0, (struct sockaddr*)&clientAddr, &addrSize);
-
-        //if (bytesRecv > 0) {
-           //cerr << "Error: Unable to receive";
-           //fprintf(stderr, "%d", bytesRecv);
-       // }
+        int bytesRecv = recvfrom(sockfd, buffer, sizeof(buffer), 0, (struct sockaddr*)&clientAddr, &addrSize);      // Receive data from client
         
         int i;
 
-        for (i = 0; i < bytesRecv; i++) {
-            write_file << buffer[i];
+        for (i = 0; i < bytesRecv; i++) {      
+            write_file << buffer[i];                // Write data to file
         }
     }
 
-    write_file.close();
+    write_file.close();                             // Close file
     
     return 0;
 }
